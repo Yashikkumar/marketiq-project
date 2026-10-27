@@ -139,7 +139,7 @@ export default function App() {
   // --- FULL-STACK FETCH ---
   const fetchDatabase = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/dashboard');
+      const response = await fetch('https://marketiq-project.onrender.com/api/dashboard');
       if (response.ok) {
         const data = await response.json();
         setDbData(data);
@@ -165,7 +165,7 @@ export default function App() {
       mrr: parseInt(e.target.mrr.value) || 0
     };
     try {
-      await fetch('http://localhost:8000/api/clients', {
+      await fetch('https://marketiq-project.onrender.com/api/clients', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newClient)
       });
       showToast('Client added & onboarding tasks generated!', <Sparkles className="w-5 h-5 text-emerald-400" />);
@@ -177,7 +177,7 @@ export default function App() {
   };
 
   const handleCompleteTask = async (taskId) => {
-    await fetch(`http://localhost:8000/api/tasks/${taskId}/complete`, { method: 'POST' });
+    await fetch(`https://marketiq-project.onrender.com/api/tasks/${taskId}/complete`, { method: 'POST' });
     showToast('Task marked as complete!');
     fetchDatabase();
   };
