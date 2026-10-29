@@ -7,6 +7,7 @@ import uuid
 
 app = FastAPI(title="MarketIQ Enterprise API")
 
+# Allow React to talk to Python
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,57 +16,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 1. DATABASE INITIALIZATION & REALISTIC SEED DATA ---
 def init_db():
     conn = sqlite3.connect('marketiq.db')
     cursor = conn.cursor()
     
+    # 1. Create Tables
     cursor.execute('''CREATE TABLE IF NOT EXISTS clients (
         id TEXT PRIMARY KEY, client_name TEXT NOT NULL, contact_person TEXT, 
         service TEXT, mrr INTEGER, status TEXT, created_at TEXT
     )''')
-    
     cursor.execute('''CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY, title TEXT NOT NULL, status TEXT, created_at TEXT
     )''')
-
     cursor.execute('''CREATE TABLE IF NOT EXISTS activities (
         id TEXT PRIMARY KEY, description TEXT NOT NULL, timestamp TEXT
     )''')
     
-    # Check if DB is empty, if so, seed realistic presentation data
+    # 2. Seed Corporate Data if DB is empty
     cursor.execute('SELECT COUNT(*) FROM clients')
     if cursor.fetchone()[0] == 0:
-        # 1. Seed Clients
         clients_data = [
-            ('CLI-9001', 'Sharma Sweets', 'Rahul Sharma', 'Google Local SEO', 25000, 'Active', '2026-08-15'),
-            ('CLI-9002', 'City Hospital', 'Dr. Priya Singh', 'Meta Ads', 65000, 'Onboarding', '2026-10-20'),
-            ('CLI-9003', 'Apex Dental Clinic', 'Dr. Vikram', 'Google Local SEO', 18000, 'Active', '2026-09-28'),
-            ('CLI-9004', 'Urban Salon & Spa', 'Neha Kapoor', 'Meta Ads', 35000, 'Active', '2026-10-05'),
-            ('CLI-9005', 'FitCore Gym', 'Amit Verma', 'WhatsApp CRM', 15000, 'Pending', '2026-10-22'),
-            ('CLI-9006', 'GreenLeaf Organics', 'Sneha Gupta', 'Google Local SEO', 22000, 'Active', '2026-08-10'),
-            ('CLI-9007', 'BlueWave Travels', 'Karan Patel', 'Meta Ads', 0, 'Lead', '2026-10-25'),
-            ('CLI-9008', 'Royal Cafe', 'Aman Singh', 'Meta Ads', 16000, 'Active', '2026-07-22'),
+            ('CLI-9001', 'TechFlow Solutions', 'Alex Mercer', 'Enterprise SEO', 45000, 'Active', '2026-08-15'),
+            ('CLI-9002', 'Lumina Cloud Systems', 'Sarah Chen', 'B2B Lead Gen', 85000, 'Onboarding', '2026-10-20'),
+            ('CLI-9003', 'Nexus Retail Group', 'David Torres', 'Enterprise SEO', 55000, 'Active', '2026-09-28'),
+            ('CLI-9004', 'Apex Financial Corp', 'Elena Rostova', 'LinkedIn Ads', 120000, 'Active', '2026-10-05'),
+            ('CLI-9005', 'Quantum Logistics', 'Michael Chang', 'B2B Lead Gen', 35000, 'Pending', '2026-10-22'),
+            ('CLI-9006', 'Horizon Media Partners', 'Rachel Green', 'Enterprise SEO', 42000, 'Active', '2026-08-10'),
         ]
         cursor.executemany("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)", clients_data)
 
-        # 2. Seed Tasks
         tasks_data = [
-            (str(uuid.uuid4())[:8], 'Setup Meta Pixel for Urban Salon & Spa', 'Completed', '2026-10-06'),
-            (str(uuid.uuid4())[:8], 'Keyword Research for Apex Dental', 'Completed', '2026-09-29'),
-            (str(uuid.uuid4())[:8], 'Draft WhatsApp templates for FitCore Gym', 'Pending', '2026-10-23'),
-            (str(uuid.uuid4())[:8], 'Onboarding call with City Hospital', 'Pending', '2026-10-21'),
-            (str(uuid.uuid4())[:8], 'Generate Q3 Reports for Active Clients', 'Pending', '2026-10-26'),
-            (str(uuid.uuid4())[:8], 'Follow up with BlueWave Travels lead', 'Pending', '2026-10-26'),
+            (str(uuid.uuid4())[:8], 'Audit Backlinks for TechFlow Solutions', 'Completed', '2026-10-06'),
+            (str(uuid.uuid4())[:8], 'Setup LinkedIn Campaign for Apex Financial', 'Completed', '2026-09-29'),
+            (str(uuid.uuid4())[:8], 'Technical SEO check for Lumina Cloud', 'Pending', '2026-10-23'),
+            (str(uuid.uuid4())[:8], 'Onboarding call with Quantum Logistics', 'Pending', '2026-10-21'),
         ]
         cursor.executemany("INSERT INTO tasks VALUES (?, ?, ?, ?)", tasks_data)
 
-        # 3. Seed Audit Logs
         activities_data = [
-            (str(uuid.uuid4()), 'Admin exported Q3 Client Pipeline CSV', '2026-10-27 10:15:22'),
-            (str(uuid.uuid4()), 'System generated automated invoice for Urban Salon', '2026-10-26 08:00:00'),
-            (str(uuid.uuid4()), 'New lead captured: BlueWave Travels via Meta Ads', '2026-10-25 09:12:45'),
-            (str(uuid.uuid4()), 'Admin onboarded new client: City Hospital', '2026-10-20 11:45:10'),
+            (str(uuid.uuid4()), 'Admin exported Client Pipeline CSV', '2026-10-27 10:15:22'),
+            (str(uuid.uuid4()), 'System generated invoice for Apex Financial', '2026-10-26 08:00:00'),
+            (str(uuid.uuid4()), 'New lead captured: Lumina Cloud Systems', '2026-10-20 11:45:10'),
             (str(uuid.uuid4()), 'System Initialized successfully', '2026-07-01 09:00:00'),
         ]
         cursor.executemany("INSERT INTO activities VALUES (?, ?, ?)", activities_data)
@@ -92,16 +83,12 @@ class ClientData(BaseModel):
 def get_dashboard_data():
     conn = sqlite3.connect('marketiq.db')
     cursor = conn.cursor()
-    
     cursor.execute('SELECT * FROM clients ORDER BY created_at DESC')
     clients = [{"id": r[0], "client": r[1], "contact": r[2], "source": r[3], "mrr": r[4], "status": r[5]} for r in cursor.fetchall()]
-    
     cursor.execute('SELECT * FROM tasks ORDER BY created_at DESC')
     tasks = [{"id": r[0], "title": r[1], "status": r[2]} for r in cursor.fetchall()]
-    
     cursor.execute('SELECT * FROM activities ORDER BY timestamp DESC LIMIT 15')
     activities = [{"id": r[0], "description": r[1], "time": r[2]} for r in cursor.fetchall()]
-    
     conn.close()
     return {"clients": clients, "tasks": tasks, "activities": activities}
 
@@ -109,20 +96,19 @@ def get_dashboard_data():
 def add_client(client: ClientData):
     conn = sqlite3.connect('marketiq.db')
     cursor = conn.cursor()
-    client_id = f"CLI-{cursor.execute('SELECT COUNT(*) FROM clients').fetchone()[0] + 9001}"
+    cursor.execute('SELECT COUNT(*) FROM clients')
+    count = cursor.fetchone()[0]
+    client_id = f"CLI-{9001 + count}"
     date_now = datetime.datetime.now().strftime("%Y-%m-%d")
     
     cursor.execute("INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?)",
         (client_id, client.client_name, client.contact_person, client.service, client.mrr, "Onboarding", date_now))
     
     task_id1 = str(uuid.uuid4())[:8]
-    task_id2 = str(uuid.uuid4())[:8]
-    cursor.execute("INSERT INTO tasks VALUES (?, ?, ?, ?)", (task_id1, f"Setup Billing Profile for {client.client_name}", "Pending", date_now))
-    cursor.execute("INSERT INTO tasks VALUES (?, ?, ?, ?)", (task_id2, f"Assign Account Manager to {client.client_name}", "Pending", date_now))
+    cursor.execute("INSERT INTO tasks VALUES (?, ?, ?, ?)", (task_id1, f"Initial SEO Audit for {client.client_name}", "Pending", date_now))
     
     conn.commit()
     conn.close()
-    
     log_activity(f"Admin onboarded new client: {client.client_name}")
     return {"message": "Client added successfully", "id": client_id}
 
