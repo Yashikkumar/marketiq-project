@@ -141,7 +141,7 @@ export default function App() {
   const fetchDatabase = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch('http://localhost:8000/api/dashboard');
+      const response = await fetch('https://marketiq-project.onrender.com/api/dashboard');
       if (response.ok) {
         const data = await response.json();
         setDbData(data);
@@ -171,7 +171,7 @@ export default function App() {
     };
     
     try {
-      const response = await fetch('http://localhost:8000/api/clients', {
+      const response = await fetch('https://marketiq-project.onrender.com/api/clients', {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(newClient)
@@ -193,7 +193,7 @@ export default function App() {
 
   const handleCompleteTask = async (taskId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/complete`, { method: 'POST' });
+      const response = await fetch(`https://marketiq-project.onrender.com/api/tasks/${taskId}/complete`, { method: 'POST' });
       if (response.ok) {
         showToast('Task marked as complete!');
         fetchDatabase();
